@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,6 +26,7 @@ public class PostModel implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
