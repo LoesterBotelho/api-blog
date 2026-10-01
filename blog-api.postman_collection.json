@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "a8f3d1e2-2026-4025-a1b2-9c8d7e6f5a4b",
-    "name": "blog-api - GlobalExceptionHandler & Comments",
-    "description": "Collection completa e corrigida com assertions para GlobalExceptionHandler, ErroResponseDto, Posts e Comments.",
+    "name": "blog-api - Posts, Paginação, Comments & GlobalExceptionHandler",
+    "description": "Collection completa para testes da Blog API: posts, paginação, comentários, validações e GlobalExceptionHandler.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -27,11 +27,33 @@
       "name": "Posts",
       "item": [
         {
-          "name": "01 - GET - Listar todos os posts",
+          "name": "01 - GET - Listar posts com paginação",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/posts"
+            "url": {
+              "raw": "{{baseUrl}}/posts?page=0&size=2&sort=titulo,asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "2"
+                },
+                {
+                  "key": "sort",
+                  "value": "titulo,asc"
+                }
+              ]
+            }
           },
           "event": [
             {
@@ -43,12 +65,78 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test(\"Retorna uma lista de PostResponseDto\", function () {",
+                  "pm.test(\"Retorna uma página de posts\", function () {",
                   "    const json = pm.response.json();",
-                  "    pm.expect(json).to.be.an(\"array\");",
-                  "    if (json.length > 0) {",
-                  "        pm.expect(json[0]).to.have.all.keys(\"id\", \"autor\", \"data\", \"titulo\", \"texto\");",
+                  "    pm.expect(json).to.have.property(\"content\");",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Valida metadados da paginação\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"page\");",
+                  "    pm.expect(json.page).to.have.property(\"size\");",
+                  "    pm.expect(json.page).to.have.property(\"number\");",
+                  "    pm.expect(json.page).to.have.property(\"totalElements\");",
+                  "    pm.expect(json.page).to.have.property(\"totalPages\");",
+                  "    pm.expect(json.page.size).to.eql(2);",
+                  "    pm.expect(json.page.number).to.eql(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida estrutura do PostResponseDto\", function () {",
+                  "    const json = pm.response.json();",
+                  "    if (json.content.length > 0) {",
+                  "        pm.expect(json.content[0]).to.have.property(\"id\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"autor\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"data\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"titulo\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"texto\");",
                   "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - GET - Listar segunda página",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?page=1&size=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna página 1\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.page.number).to.eql(1);",
+                  "    pm.expect(json.page.size).to.eql(2);",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
                   "});"
                 ]
               }

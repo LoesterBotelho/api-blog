@@ -19,6 +19,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,6 +43,7 @@ class PostControllerTest {
 
     @BeforeEach
     void setUp() {
+
         id = UUID.randomUUID();
 
         response = new PostResponseDto(
@@ -54,34 +57,67 @@ class PostControllerTest {
     }
 
     @Test
-    void deveListarTodosOsPosts() throws Exception {
-        when(postService.findAll()).thenReturn(List.of(response));
+    void deveListarPostsComPaginacao() throws Exception {
 
-        mockMvc.perform(get("/posts"))
+        PageImpl<PostResponseDto> page =
+                new PageImpl<>(List.of(response));
+
+        when(postService.findAll(any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(
+                get("/posts")
+                        .param("page", "0")
+                        .param("size", "1")
+        )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(id.toString()))
-                .andExpect(jsonPath("$[0].autor").value("Loester Botelho"))
-                .andExpect(jsonPath("$[0].data").value("2026-09-16"))
-                .andExpect(jsonPath("$[0].titulo").value("Aprendendo Spring Boot"))
-                .andExpect(jsonPath("$[0].texto").value("Conteúdo sobre desenvolvimento de APIs REST."));
+                .andExpect(jsonPath("$.content[0].id")
+                        .value(id.toString()))
+                .andExpect(jsonPath("$.content[0].autor")
+                        .value("Loester Botelho"))
+                .andExpect(jsonPath("$.content[0].data")
+                        .value("2026-09-16"))
+                .andExpect(jsonPath("$.content[0].titulo")
+                        .value("Aprendendo Spring Boot"))
+                .andExpect(jsonPath("$.content[0].texto")
+                        .value("Conteúdo sobre desenvolvimento de APIs REST."))
+                .andExpect(jsonPath("$.page.size")
+                        .value(1))
+                .andExpect(jsonPath("$.page.number")
+                        .value(0))
+                .andExpect(jsonPath("$.page.totalElements")
+                        .value(1))
+                .andExpect(jsonPath("$.page.totalPages")
+                        .value(1));
     }
 
     @Test
     void deveObterPostPorId() throws Exception {
-        when(postService.findById(id)).thenReturn(response);
 
-        mockMvc.perform(get("/posts/{id}", id))
+        when(postService.findById(id))
+                .thenReturn(response);
+
+        mockMvc.perform(
+                get("/posts/{id}", id)
+        )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.autor").value("Loester Botelho"))
-                .andExpect(jsonPath("$.data").value("2026-09-16"))
-                .andExpect(jsonPath("$.titulo").value("Aprendendo Spring Boot"))
-                .andExpect(jsonPath("$.texto").value("Conteúdo sobre desenvolvimento de APIs REST."));
+                .andExpect(jsonPath("$.id")
+                        .value(id.toString()))
+                .andExpect(jsonPath("$.autor")
+                        .value("Loester Botelho"))
+                .andExpect(jsonPath("$.data")
+                        .value("2026-09-16"))
+                .andExpect(jsonPath("$.titulo")
+                        .value("Aprendendo Spring Boot"))
+                .andExpect(jsonPath("$.texto")
+                        .value("Conteúdo sobre desenvolvimento de APIs REST."));
     }
 
     @Test
     void deveIncluirPost() throws Exception {
-        when(postService.createPost(any(PostRequestDto.class))).thenReturn(response);
+
+        when(postService.createPost(any(PostRequestDto.class)))
+                .thenReturn(response);
 
         mockMvc.perform(
                 post("/posts")
@@ -95,16 +131,25 @@ class PostControllerTest {
                                 """)
         )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.autor").value("Loester Botelho"))
-                .andExpect(jsonPath("$.data").value("2026-09-16"))
-                .andExpect(jsonPath("$.titulo").value("Aprendendo Spring Boot"))
-                .andExpect(jsonPath("$.texto").value("Conteúdo sobre desenvolvimento de APIs REST."));
+                .andExpect(jsonPath("$.id")
+                        .value(id.toString()))
+                .andExpect(jsonPath("$.autor")
+                        .value("Loester Botelho"))
+                .andExpect(jsonPath("$.data")
+                        .value("2026-09-16"))
+                .andExpect(jsonPath("$.titulo")
+                        .value("Aprendendo Spring Boot"))
+                .andExpect(jsonPath("$.texto")
+                        .value("Conteúdo sobre desenvolvimento de APIs REST."));
     }
 
     @Test
     void deveAtualizarPost() throws Exception {
-        when(postService.updatePost(eq(id), any(PostRequestDto.class))).thenReturn(response);
+
+        when(postService.updatePost(
+                eq(id),
+                any(PostRequestDto.class)))
+                .thenReturn(response);
 
         mockMvc.perform(
                 put("/posts/{id}", id)
@@ -118,23 +163,35 @@ class PostControllerTest {
                                 """)
         )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.autor").value("Loester Botelho"))
-                .andExpect(jsonPath("$.data").value("2026-09-16"))
-                .andExpect(jsonPath("$.titulo").value("Aprendendo Spring Boot"))
-                .andExpect(jsonPath("$.texto").value("Conteúdo sobre desenvolvimento de APIs REST."));
+                .andExpect(jsonPath("$.id")
+                        .value(id.toString()))
+                .andExpect(jsonPath("$.autor")
+                        .value("Loester Botelho"))
+                .andExpect(jsonPath("$.data")
+                        .value("2026-09-16"))
+                .andExpect(jsonPath("$.titulo")
+                        .value("Aprendendo Spring Boot"))
+                .andExpect(jsonPath("$.texto")
+                        .value("Conteúdo sobre desenvolvimento de APIs REST."));
     }
 
     @Test
     void deveDeletarPost() throws Exception {
-        doNothing().when(postService).deletePost(id);
 
-        mockMvc.perform(delete("/posts/{id}", id))
+        doNothing()
+                .when(postService)
+                .deletePost(id);
+
+        mockMvc.perform(
+                delete("/posts/{id}", id)
+        )
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void deveRetornarBadRequestQuandoAutorEstiverVazio() throws Exception {
+    void deveRetornarBadRequestQuandoAutorEstiverVazio()
+            throws Exception {
+
         mockMvc.perform(
                 post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -150,7 +207,9 @@ class PostControllerTest {
     }
 
     @Test
-    void deveRetornarBadRequestQuandoAutorForMuitoCurto() throws Exception {
+    void deveRetornarBadRequestQuandoAutorForMuitoCurto()
+            throws Exception {
+
         mockMvc.perform(
                 post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -166,7 +225,9 @@ class PostControllerTest {
     }
 
     @Test
-    void deveRetornarBadRequestQuandoTituloEstiverVazio() throws Exception {
+    void deveRetornarBadRequestQuandoTituloEstiverVazio()
+            throws Exception {
+
         mockMvc.perform(
                 post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -182,7 +243,9 @@ class PostControllerTest {
     }
 
     @Test
-    void deveRetornarBadRequestQuandoTituloForMuitoCurto() throws Exception {
+    void deveRetornarBadRequestQuandoTituloForMuitoCurto()
+            throws Exception {
+
         mockMvc.perform(
                 post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -198,7 +261,9 @@ class PostControllerTest {
     }
 
     @Test
-    void deveRetornarBadRequestQuandoTextoEstiverVazio() throws Exception {
+    void deveRetornarBadRequestQuandoTextoEstiverVazio()
+            throws Exception {
+
         mockMvc.perform(
                 post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -214,7 +279,9 @@ class PostControllerTest {
     }
 
     @Test
-    void deveRetornarBadRequestQuandoTextoForMuitoCurto() throws Exception {
+    void deveRetornarBadRequestQuandoTextoForMuitoCurto()
+            throws Exception {
+
         mockMvc.perform(
                 post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)

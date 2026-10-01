@@ -1,3 +1,29 @@
+```
+
+http://localhost:8080/swagger-ui.html
+http://localhost:8080/v3/api-docs
+http://localhost:8080/posts?page=0&size=1
+
+
+i18n - Internacionalização
+l10n - Localização
+
+pt-BR
+en-US
+es-ES
+
+LANGUAGES
+
+com.api.blog.config
+MessageConfig
+
+CharSet
+utf-8
+UTF-8
+
+
+```
+
 # Blog API
 
 REST API para gerenciamento de posts, desenvolvida com Java 25 e Spring Boot 4.1.1.

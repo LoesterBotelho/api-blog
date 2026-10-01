@@ -5,27 +5,28 @@ import jakarta.validation.constraints.Size;
 
 public record PostRequestDto(
 
-        @NotBlank(message = "Autor é obrigatório")
+        @NotBlank(message = "{post.autor.notblank}")
         @Size(
                 min = 3,
                 max = 100,
-                message = "Autor deve possuir entre 3 e 100 caracteres"
+                message = "{post.autor.size}"
         )
         String autor,
 
-        @NotBlank(message = "Título é obrigatório")
+        @NotBlank(message = "{post.titulo.notblank}")
         @Size(
                 min = 3,
                 max = 100,
-                message = "Título deve possuir entre 3 e 100 caracteres"
+                message = "{post.titulo.size}"
         )
         String titulo,
 
-        @NotBlank(message = "Texto é obrigatório")
+        @NotBlank(message = "{post.texto.notblank}")
         @Size(
                 min = 10,
-                message = "Texto deve possuir no mínimo 10 caracteres"
+                message = "{post.texto.size}"
         )
         String texto
+
 ) {
 }

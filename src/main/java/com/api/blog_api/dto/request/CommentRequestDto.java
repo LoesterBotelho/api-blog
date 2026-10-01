@@ -5,19 +5,19 @@ import jakarta.validation.constraints.Size;
 
 public record CommentRequestDto(
 
-        @NotBlank(message = "Autor é obrigatório")
+        @NotBlank(message = "{comment.autor.notblank}")
         @Size(
                 min = 3,
                 max = 100,
-                message = "Autor deve possuir entre 3 e 100 caracteres"
+                message = "{comment.autor.size}"
         )
         String autor,
 
-        @NotBlank(message = "Texto é obrigatório")
+        @NotBlank(message = "{comment.texto.notblank}")
         @Size(
                 min = 5,
                 max = 1000,
-                message = "Texto deve possuir entre 5 e 1000 caracteres"
+                message = "{comment.texto.size}"
         )
         String texto
 

@@ -1,11 +1,12 @@
 package com.api.blog_api.service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +40,9 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentResponseDto createComment(UUID postId, CommentRequestDto dto) {
+    public CommentResponseDto createComment(
+            UUID postId,
+            CommentRequestDto dto) {
 
         PostModel post = postRepository.findById(postId)
                 .orElseThrow(() ->
@@ -51,29 +54,33 @@ public class CommentServiceImpl implements CommentService {
         CommentModel comment = commentMapper.toModel(dto);
         comment.setPost(post);
 
-        // Garante que a data atual seja definida antes de salvar caso o mapper não a preencha
+        // Garante que a data atual seja definida
+        // caso o mapper não a preencha
         if (comment.getData() == null) {
             comment.setData(LocalDate.now());
         }
 
-        CommentModel commentSalvo = commentRepository.save(comment);
+        CommentModel commentSalvo =
+                commentRepository.save(comment);
 
         return commentMapper.toResponse(commentSalvo);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommentResponseDto> findAll() {
+    public Page<CommentResponseDto> findAll(
+            Pageable pageable) {
 
-        return commentRepository.findAll()
-                .stream()
-                .map(commentMapper::toResponse)
-                .toList();
+        return commentRepository
+                .findAll(pageable)
+                .map(commentMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommentResponseDto> findByPostId(UUID postId) {
+    public Page<CommentResponseDto> findByPostId(
+            UUID postId,
+            Pageable pageable) {
 
         if (!postRepository.existsById(postId)) {
             throw new RegistroNaoEncontradoException(
@@ -81,10 +88,9 @@ public class CommentServiceImpl implements CommentService {
             );
         }
 
-        return commentRepository.findByPostId(postId)
-                .stream()
-                .map(commentMapper::toResponse)
-                .toList();
+        return commentRepository
+                .findByPostId(postId, pageable)
+                .map(commentMapper::toResponse);
     }
 
     @Override
@@ -112,21 +118,26 @@ public class CommentServiceImpl implements CommentService {
             UUID id,
             CommentRequestDto dto) {
 
-        CommentModel comment = buscarComentarioPorId(id);
+        CommentModel comment =
+                buscarComentarioPorId(id);
 
         comment.setAutor(dto.autor());
         comment.setTexto(dto.texto());
 
-        CommentModel commentAtualizado = commentRepository.save(comment);
+        CommentModel commentAtualizado =
+                commentRepository.save(comment);
 
-        return commentMapper.toResponse(commentAtualizado);
+        return commentMapper.toResponse(
+                commentAtualizado
+        );
     }
 
     @Override
     @Transactional
     public void deleteComment(UUID id) {
 
-        CommentModel comment = buscarComentarioPorId(id);
+        CommentModel comment =
+                buscarComentarioPorId(id);
 
         commentRepository.delete(comment);
     }
@@ -137,7 +148,8 @@ public class CommentServiceImpl implements CommentService {
         return commentRepository.findById(id)
                 .orElseThrow(() ->
                         new RegistroNaoEncontradoException(
-                                "Comentário não encontrado com o ID: " + id
+                                "Comentário não encontrado com o ID: "
+                                        + id
                         )
                 );
     }

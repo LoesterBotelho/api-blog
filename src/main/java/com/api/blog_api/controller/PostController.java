@@ -1,8 +1,9 @@
 package com.api.blog_api.controller;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,10 +19,16 @@ import com.api.blog_api.dto.request.PostRequestDto;
 import com.api.blog_api.dto.response.PostResponseDto;
 import com.api.blog_api.service.PostService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/posts")
+@Tag(
+    name = "Posts e Comentários",
+    description = "Operações do Blog API"
+)
 public class PostController {
 
     private final PostService postService;
@@ -30,16 +37,29 @@ public class PostController {
         this.postService = postService;
     }
 
+    @Operation(
+        summary = "Lista posts com paginação"
+    )
     @GetMapping
-    public List<PostResponseDto> findAll() {
-        return postService.findAll();
+    public Page<PostResponseDto> findAll(
+            Pageable pageable) {
+
+        return postService.findAll(pageable);
     }
 
+    @Operation(
+        summary = "Busca um post pelo ID"
+    )
     @GetMapping("/{id}")
-    public PostResponseDto findById(@PathVariable UUID id) {
+    public PostResponseDto findById(
+            @PathVariable UUID id) {
+
         return postService.findById(id);
     }
 
+    @Operation(
+        summary = "Cadastra um novo post"
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PostResponseDto createPost(
@@ -48,6 +68,9 @@ public class PostController {
         return postService.createPost(dto);
     }
 
+    @Operation(
+        summary = "Atualiza um post"
+    )
     @PutMapping("/{id}")
     public PostResponseDto updatePost(
             @PathVariable UUID id,
@@ -56,9 +79,13 @@ public class PostController {
         return postService.updatePost(id, dto);
     }
 
+    @Operation(
+        summary = "Exclui um post"
+    )
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePost(@PathVariable UUID id) {
+    public void deletePost(
+            @PathVariable UUID id) {
 
         postService.deletePost(id);
     }
