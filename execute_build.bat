@@ -1,22 +1,17 @@
 @echo off
 setlocal
 
+REM Carrega as variaveis centrais
+call config.bat
+
 REM ==========================================
 REM Docker Image Configuration
 REM ==========================================
-
-set IMAGE_NAME=blog-api
-set IMAGE_VERSION=1.0.0
 set IMAGE=%IMAGE_NAME%:%IMAGE_VERSION%
-
-set CONTAINER_NAME=blog-api
-set HOST_PORT=8080
-set CONTAINER_PORT=8080
 
 REM ==========================================
 REM Build Docker Image
 REM ==========================================
-
 echo.
 echo ==========================================
 echo Building Docker image
@@ -38,16 +33,13 @@ if %ERRORLEVEL% NEQ 0 (
 REM ==========================================
 REM Remove Existing Container
 REM ==========================================
-
 echo.
 echo Removing existing container if it exists...
-
 docker rm -f %CONTAINER_NAME% >nul 2>&1
 
 REM ==========================================
 REM Run Container
 REM ==========================================
-
 echo.
 echo ==========================================
 echo Starting container
@@ -71,7 +63,6 @@ if %ERRORLEVEL% NEQ 0 (
 REM ==========================================
 REM Success
 REM ==========================================
-
 echo.
 echo ==========================================
 echo Application started successfully!

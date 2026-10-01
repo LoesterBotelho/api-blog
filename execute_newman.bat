@@ -1,4 +1,8 @@
 @echo off
+setlocal
+
+REM Carrega as variaveis centrais (caso precise de portas ou nomes no futuro)
+call config.bat
 
 echo Verificando se o Node.js esta instalado...
 node -v >nul 2>&1
@@ -22,8 +26,9 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Executando a colecao de testes com o Newman...
-newman run blog-api.postman_collection.json
+newman run %POSTMAN_COLLECTION%
 
 echo.
 echo Testes finalizados!
 pause
+endlocal

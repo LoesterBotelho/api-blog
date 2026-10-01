@@ -1,0 +1,1206 @@
+{
+  "info": {
+    "_postman_id": "a8f3d1e2-2026-4025-a1b2-9c8d7e6f5a4b",
+    "name": "api-blog - Posts, Paginação, Comments & GlobalExceptionHandler",
+    "description": "Collection completa para testes da Blog API: posts, paginação, comentários, validações e GlobalExceptionHandler.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "postId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "commentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "01 - GET - Listar posts com paginação",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?page=0&size=2&sort=titulo,asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "2"
+                },
+                {
+                  "key": "sort",
+                  "value": "titulo,asc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna uma página de posts\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"content\");",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Valida metadados da paginação\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"page\");",
+                  "    pm.expect(json.page).to.have.property(\"size\");",
+                  "    pm.expect(json.page).to.have.property(\"number\");",
+                  "    pm.expect(json.page).to.have.property(\"totalElements\");",
+                  "    pm.expect(json.page).to.have.property(\"totalPages\");",
+                  "    pm.expect(json.page.size).to.eql(2);",
+                  "    pm.expect(json.page.number).to.eql(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida estrutura do PostResponseDto\", function () {",
+                  "    const json = pm.response.json();",
+                  "    if (json.content.length > 0) {",
+                  "        pm.expect(json.content[0]).to.have.property(\"id\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"autor\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"data\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"titulo\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"texto\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"comentarios\");",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - GET - Listar segunda página",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?page=1&size=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna página 1\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"page\");",
+                  "    pm.expect(json.page.number).to.eql(1);",
+                  "    pm.expect(json.page.size).to.eql(2);",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - POST - Criar post válido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST com Spring Boot.\"\n}"
+            },
+            "url": "{{baseUrl}}/posts"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna PostResponseDto com ID gerado\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"id\");",
+                  "    pm.expect(json.autor).to.eql(\"Loester Botelho\");",
+                  "    pm.expect(json).to.have.property(\"data\");",
+                  "    pm.expect(json).to.have.property(\"titulo\");",
+                  "    pm.expect(json).to.have.property(\"texto\");",
+                  "    pm.expect(json).to.have.property(\"comentarios\");",
+                  "    pm.collectionVariables.set(\"postId\", json.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - GET - Buscar post por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/posts/{{postId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estrutura compatível com PostResponseDto\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"id\");",
+                  "    pm.expect(json).to.have.property(\"autor\");",
+                  "    pm.expect(json).to.have.property(\"data\");",
+                  "    pm.expect(json).to.have.property(\"titulo\");",
+                  "    pm.expect(json).to.have.property(\"texto\");",
+                  "    pm.expect(json).to.have.property(\"comentarios\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - GET - Post inexistente (404 Not Found)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/posts/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida estrutura de ErroResponseDto\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "    pm.expect(json.erro).to.eql(\"Not Found\");",
+                  "    pm.expect(json.mensagem).to.be.a(\"string\");",
+                  "    pm.expect(json.dataHora).to.be.a(\"string\");",
+                  "});",
+                  "",
+                  "pm.test(\"Valida mensagem de post não encontrado\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.mensagem).to.include(\"Post não encontrado com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - PUT - Atualizar post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot - Atualizado\",\n  \"texto\": \"Conteúdo atualizado sobre desenvolvimento de APIs REST.\"\n}"
+            },
+            "url": "{{baseUrl}}/posts/{{postId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna PostResponseDto atualizado\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.titulo).to.eql(\"Aprendendo Spring Boot - Atualizado\");",
+                  "    pm.expect(json).to.have.property(\"comentarios\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - PUT - Atualizar post inexistente (404 Not Found)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+            },
+            "url": "{{baseUrl}}/posts/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida resposta 404 ao atualizar post inexistente\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "    pm.expect(json.erro).to.eql(\"Not Found\");",
+                  "    pm.expect(json.mensagem).to.include(\"Post não encontrado com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - DELETE - Excluir post inexistente (404 Not Found)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/posts/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida resposta 404 ao excluir post inexistente\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "    pm.expect(json.erro).to.eql(\"Not Found\");",
+                  "    pm.expect(json.mensagem).to.include(\"Post não encontrado com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validações do GlobalExceptionHandler (400 Bad Request)",
+          "item": [
+            {
+              "name": "09 - Autor obrigatório (vazio)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+                },
+                "url": "{{baseUrl}}/posts"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "    pm.expect(json.dataHora).to.be.a(\"string\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de Autor obrigatório\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"autor: Autor é obrigatório\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "10 - Autor com menos de 3 caracteres",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"AB\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+                },
+                "url": "{{baseUrl}}/posts"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de tamanho do Autor\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"autor: Autor deve possuir entre 3 e 100 caracteres\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "11 - Título obrigatório (vazio)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+                },
+                "url": "{{baseUrl}}/posts"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de Título obrigatório\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"titulo: Título é obrigatório\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "12 - Título com menos de 3 caracteres",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"AB\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+                },
+                "url": "{{baseUrl}}/posts"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de tamanho do Título\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"titulo: Título deve possuir entre 3 e 100 caracteres\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "13 - Texto com menos de 10 caracteres",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Curto\"\n}"
+                },
+                "url": "{{baseUrl}}/posts"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de tamanho do Texto\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"texto: Texto deve possuir no mínimo 10 caracteres\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "14 - Texto obrigatório (vazio)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"\"\n}"
+                },
+                "url": "{{baseUrl}}/posts"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de Texto obrigatório\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"texto: Texto é obrigatório\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "15 - Payload JSON malformado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo\",\n  \"texto\":"
+                },
+                "url": "{{baseUrl}}/posts"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "    pm.expect(json.mensagem).to.eql(\"O corpo da requisição contém um JSON inválido ou campos com tipos incompatíveis\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "16 - POST - Criar comentário válido para o post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Maria Silva\",\n  \"texto\": \"Excelente artigo sobre Spring Boot!\"\n}"
+            },
+            "url": "{{baseUrl}}/comments/post/{{postId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna CommentResponseDto com ID gerado\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"id\");",
+                  "    pm.expect(json.autor).to.eql(\"Maria Silva\");",
+                  "    pm.expect(json).to.have.property(\"data\");",
+                  "    pm.expect(json).to.have.property(\"texto\");",
+                  "    pm.expect(json).to.have.property(\"postId\");",
+                  "    pm.expect(json.postId).to.eql(pm.collectionVariables.get(\"postId\"));",
+                  "    pm.collectionVariables.set(\"commentId\", json.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17 - GET - Listar todos os comentários com paginação",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/comments?page=0&size=2",
+            "host": [
+              "{{baseUrl}}"
+            ],
+            "path": [
+              "comments"
+            ],
+            "query": [
+              {
+                "key": "page",
+                "value": "0"
+              },
+              {
+                "key": "size",
+                "value": "2"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna uma página de comentários\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"content\");",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Valida metadados da paginação\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"page\");",
+                  "    pm.expect(json.page).to.have.property(\"size\");",
+                  "    pm.expect(json.page).to.have.property(\"number\");",
+                  "    pm.expect(json.page).to.have.property(\"totalElements\");",
+                  "    pm.expect(json.page).to.have.property(\"totalPages\");",
+                  "    pm.expect(json.page.size).to.eql(2);",
+                  "    pm.expect(json.page.number).to.eql(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida estrutura do CommentResponseDto\", function () {",
+                  "    const json = pm.response.json();",
+                  "    if (json.content.length > 0) {",
+                  "        pm.expect(json.content[0]).to.have.all.keys(\"id\", \"autor\", \"data\", \"texto\", \"postId\");",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18 - GET - Listar comentários por Post ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/comments/post/{{postId}}?page=0&size=2"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna uma página de comentários do post\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"content\");",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
+                  "    pm.expect(json.content.length).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida comentários do post\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.content[0].postId).to.eql(pm.collectionVariables.get(\"postId\"));",
+                  "});",
+                  "",
+                  "pm.test(\"Valida metadados da paginação\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"page\");",
+                  "    pm.expect(json.page).to.have.property(\"size\");",
+                  "    pm.expect(json.page).to.have.property(\"number\");",
+                  "    pm.expect(json.page).to.have.property(\"totalElements\");",
+                  "    pm.expect(json.page).to.have.property(\"totalPages\");",
+                  "    pm.expect(json.page.size).to.eql(2);",
+                  "    pm.expect(json.page.number).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "19 - GET - Buscar comentário por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/comments/{{commentId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Estrutura compatível com CommentResponseDto\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"id\", \"autor\", \"data\", \"texto\", \"postId\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "20 - GET - Comentário inexistente (404 Not Found)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/comments/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida estrutura de ErroResponseDto\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "    pm.expect(json.erro).to.eql(\"Not Found\");",
+                  "    pm.expect(json.mensagem).to.be.a(\"string\");",
+                  "    pm.expect(json.dataHora).to.be.a(\"string\");",
+                  "});",
+                  "",
+                  "pm.test(\"Valida mensagem de comentário não encontrado\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.mensagem).to.include(\"Comentário não encontrado com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "21 - PUT - Atualizar comentário",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Maria Silva\",\n  \"texto\": \"Excelente artigo sobre Spring Boot! Comentário editado.\"\n}"
+            },
+            "url": "{{baseUrl}}/comments/{{commentId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna CommentResponseDto atualizado\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"id\", \"autor\", \"data\", \"texto\", \"postId\");",
+                  "    pm.expect(json.texto).to.include(\"Comentário editado.\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "22 - DELETE - Excluir comentário",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/comments/{{commentId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "23 - POST - Criar comentário em post inexistente (404 Not Found)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Maria Silva\",\n  \"texto\": \"Comentário em post inexistente\"\n}"
+            },
+            "url": "{{baseUrl}}/comments/post/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 ao tentar criar comentário em post inexistente\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "    pm.expect(json.erro).to.eql(\"Not Found\");",
+                  "    pm.expect(json.mensagem).to.include(\"Post não encontrado com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "24 - PUT - Atualizar comentário inexistente (404 Not Found)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Maria Silva\",\n  \"texto\": \"Comentário editado\"\n}"
+            },
+            "url": "{{baseUrl}}/comments/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 ao atualizar comentário inexistente\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "    pm.expect(json.erro).to.eql(\"Not Found\");",
+                  "    pm.expect(json.mensagem).to.include(\"Comentário não encontrado com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "25 - DELETE - Excluir comentário inexistente (404 Not Found)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/comments/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 ao excluir comentário inexistente\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "    pm.expect(json.erro).to.eql(\"Not Found\");",
+                  "    pm.expect(json.mensagem).to.include(\"Comentário não encontrado com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validações de Comentário (400 Bad Request)",
+          "item": [
+            {
+              "name": "26 - Autor obrigatório (vazio)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"\",\n  \"texto\": \"Excelente artigo sobre Spring Boot!\"\n}"
+                },
+                "url": "{{baseUrl}}/comments/post/{{postId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de Autor obrigatório\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"autor: Autor é obrigatório\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "27 - Autor com menos de 3 caracteres",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"AB\",\n  \"texto\": \"Excelente artigo sobre Spring Boot!\"\n}"
+                },
+                "url": "{{baseUrl}}/comments/post/{{postId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de tamanho do Autor\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"autor: Autor deve possuir entre 3 e 100 caracteres\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "28 - Texto obrigatório (vazio)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"Maria Silva\",\n  \"texto\": \"\"\n}"
+                },
+                "url": "{{baseUrl}}/comments/post/{{postId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de Texto obrigatório\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"texto: Texto é obrigatório\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "29 - Texto com menos de 5 caracteres",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"Maria Silva\",\n  \"texto\": \"Oi\"\n}"
+                },
+                "url": "{{baseUrl}}/comments/post/{{postId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 e contrato ErroResponseDto\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                      "    pm.expect(json.status).to.eql(400);",
+                      "    pm.expect(json.erro).to.eql(\"Bad Request\");",
+                      "});",
+                      "",
+                      "pm.test(\"Valida mensagem de tamanho do Texto\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"texto: Texto deve possuir entre 5 e 1000 caracteres\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

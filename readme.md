@@ -1,4 +1,32 @@
+# ATENÇÃO !!!
+
+### O arquivo : "messages_pt_BR.properties" , tem que ser editado pelo notepad++ ou ferramenta que permita editar em utf-8 , convert coding utf-8. senão da erros nos testes unitários e newman.
+
+---
+
+
+## Executar MariaDB com Docker
+
+Criar o volume:
+
+```bash
+docker volume create mariadb_data
 ```
+
+Criar o container:
+
+```bash
+docker run -d --name meu_mariadb -p 3306:3306 -e MARIADB_ROOT_PASSWORD=root -v mariadb_data:/var/lib/mysql --restart unless-stopped mariadb:11.8
+```
+
+
+
+```
+
+git remote -v
+git remote set-url origin https://github.com/LoesterBotelho/api-blog.git
+git remote -v
+
 
 http://localhost:8080/swagger-ui.html
 http://localhost:8080/v3/api-docs
