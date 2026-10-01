@@ -12,8 +12,12 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://api-blog:80",
-                        "http://localhost:4200"
+                        // Angular rodando localmente
+                        "http://localhost:4200",
+                        "http://127.0.0.1:4200",
+
+                        // Angular em container Docker
+                        "http://api-blog:80"
                 )
                 .allowedMethods(
                         "GET",
