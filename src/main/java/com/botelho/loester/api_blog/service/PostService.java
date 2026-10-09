@@ -11,6 +11,7 @@ import com.botelho.loester.api_blog.dto.response.PostResponseDto;
 public interface PostService {
 
     Page<PostResponseDto> findAll(Pageable pageable);
+    Page<PostResponseDto> findAll(Pageable pageable, String titulo);
 
     PostResponseDto findById(UUID id);
 

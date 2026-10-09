@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,14 +52,15 @@ public class CommentController {
     }
 
     @Operation(
-        summary = "Lista todos os comentários com paginação"
+        summary = "Lista comentários com paginação e filtro por texto"
     )
     @GetMapping
     public PageResponseDto<CommentResponseDto> findAll(
-            Pageable pageable) {
+            Pageable pageable,
+            @RequestParam(required = false) String texto) {
 
         Page<CommentResponseDto> result =
-                commentService.findAll(pageable);
+                commentService.findAll(pageable, texto);
 
         return new PageResponseDto<>(
                 result.getContent(),

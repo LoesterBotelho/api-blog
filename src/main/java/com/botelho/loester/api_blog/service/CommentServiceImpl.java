@@ -1,7 +1,6 @@
 package com.botelho.loester.api_blog.service;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -67,8 +66,26 @@ public class CommentServiceImpl implements CommentService {
     public Page<CommentResponseDto> findAll(
             Pageable pageable) {
 
+        return commentRepository.findAll(pageable)
+                .map(commentMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CommentResponseDto> findAll(
+            Pageable pageable,
+            String texto) {
+
+        if (texto == null || texto.isBlank()) {
+            return commentRepository.findAll(pageable)
+                    .map(commentMapper::toResponse);
+        }
+
         return commentRepository
-                .findAll(pageable)
+                .findByTextoContainingIgnoreCase(
+                        texto.trim(),
+                        pageable
+                )
                 .map(commentMapper::toResponse);
     }
 
@@ -94,19 +111,9 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public CommentResponseDto findById(UUID id) {
 
-        Optional<CommentModel> optionalComment =
-                commentRepository.findById(id);
+        CommentModel comment = buscarComentarioPorId(id);
 
-        if (optionalComment.isEmpty()) {
-            throw new RegistroNaoEncontradoException(
-                    "comment.notfound",
-                    id
-            );
-        }
-
-        return commentMapper.toResponse(
-                optionalComment.get()
-        );
+        return commentMapper.toResponse(comment);
     }
 
     @Override
@@ -114,8 +121,7 @@ public class CommentServiceImpl implements CommentService {
             UUID id,
             CommentRequestDto dto) {
 
-        CommentModel comment =
-                buscarComentarioPorId(id);
+        CommentModel comment = buscarComentarioPorId(id);
 
         comment.setAutor(dto.autor());
         comment.setTexto(dto.texto());
@@ -123,16 +129,13 @@ public class CommentServiceImpl implements CommentService {
         CommentModel commentAtualizado =
                 commentRepository.save(comment);
 
-        return commentMapper.toResponse(
-                commentAtualizado
-        );
+        return commentMapper.toResponse(commentAtualizado);
     }
 
     @Override
     public void deleteComment(UUID id) {
 
-        CommentModel comment =
-                buscarComentarioPorId(id);
+        CommentModel comment = buscarComentarioPorId(id);
 
         commentRepository.delete(comment);
     }

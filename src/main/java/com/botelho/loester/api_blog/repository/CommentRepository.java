@@ -10,9 +10,14 @@ import com.botelho.loester.api_blog.model.CommentModel;
 
 public interface CommentRepository
         extends JpaRepository<CommentModel, UUID> {
-	
+
     Page<CommentModel> findByPostId(
             UUID postId,
-            Pageable pageable);
-    
+            Pageable pageable
+    );
+
+    Page<CommentModel> findByTextoContainingIgnoreCase(
+            String texto,
+            Pageable pageable
+    );
 }

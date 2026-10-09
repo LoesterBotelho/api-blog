@@ -12,19 +12,27 @@ public interface CommentService {
 
     Page<CommentResponseDto> findAll(Pageable pageable);
 
+    Page<CommentResponseDto> findAll(
+            Pageable pageable,
+            String texto
+    );
+
     Page<CommentResponseDto> findByPostId(
             UUID postId,
-            Pageable pageable);
+            Pageable pageable
+    );
 
     CommentResponseDto findById(UUID id);
 
     CommentResponseDto createComment(
             UUID postId,
-            CommentRequestDto dto);
+            CommentRequestDto dto
+    );
 
     CommentResponseDto updateComment(
             UUID id,
-            CommentRequestDto dto);
+            CommentRequestDto dto
+    );
 
     void deleteComment(UUID id);
 }

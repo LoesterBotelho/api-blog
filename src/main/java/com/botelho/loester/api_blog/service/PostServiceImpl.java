@@ -38,7 +38,23 @@ public class PostServiceImpl implements PostService {
                 .findAll(pageable)
                 .map(postMapper::toResponse);
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponseDto> findAll(
+            Pageable pageable,
+            String titulo) {
 
+        if (titulo == null || titulo.isBlank()) {
+            return postRepository.findAll(pageable)
+                    .map(postMapper::toResponse);
+        }
+
+        return postRepository
+                .findByTituloContainingIgnoreCase(titulo.trim(), pageable)
+                .map(postMapper::toResponse);
+    }
+    
     @Override
     @Transactional(readOnly = true)
     public PostResponseDto findById(UUID id) {

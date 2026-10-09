@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,14 +40,15 @@ public class PostController {
     }
 
     @Operation(
-        summary = "Lista posts com paginação"
+        summary = "Lista posts com paginação e filtro por título"
     )
     @GetMapping
     public PageResponseDto<PostResponseDto> findAll(
-            Pageable pageable) {
+            Pageable pageable,
+            @RequestParam(required = false) String titulo) {
 
         Page<PostResponseDto> result =
-                postService.findAll(pageable);
+                postService.findAll(pageable, titulo);
 
         return new PageResponseDto<>(
                 result.getContent(),
