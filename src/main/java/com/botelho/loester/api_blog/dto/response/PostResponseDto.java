@@ -10,6 +10,8 @@ public record PostResponseDto(
         LocalDate data,
         String titulo,
         String texto,
+        UUID categoriaId,
+        String categoriaNome,
         List<CommentResponseDto> comentarios
 ) {
 }

@@ -1,6 +1,9 @@
 package com.botelho.loester.api_blog.dto.request;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record PostRequestDto(
@@ -26,7 +29,10 @@ public record PostRequestDto(
                 min = 10,
                 message = "{post.texto.size}"
         )
-        String texto
+        String texto,
+
+        @NotNull(message = "{post.categoria.notnull}")
+        UUID categoriaId
 
 ) {
 }

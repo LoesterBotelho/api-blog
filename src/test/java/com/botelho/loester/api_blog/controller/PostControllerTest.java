@@ -2,6 +2,7 @@ package com.botelho.loester.api_blog.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -26,7 +27,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.botelho.loester.api_blog.dto.request.PostRequestDto;
 import com.botelho.loester.api_blog.dto.response.PostResponseDto;
 import com.botelho.loester.api_blog.service.PostService;
 
@@ -40,12 +40,14 @@ class PostControllerTest {
     private PostService postService;
 
     private UUID id;
+    private UUID categoriaId;
     private PostResponseDto response;
 
     @BeforeEach
     void setUp() {
 
         id = UUID.randomUUID();
+        categoriaId = UUID.randomUUID();
 
         response = new PostResponseDto(
                 id,
@@ -53,26 +55,50 @@ class PostControllerTest {
                 LocalDate.of(2026, 9, 16),
                 "Aprendendo Spring Boot",
                 "Conteúdo sobre desenvolvimento de APIs REST.",
+                categoriaId,
+                "Java",
                 List.of()
         );
+    }
+
+    private String jsonPost(
+            String autor,
+            String titulo,
+            String texto) {
+
+        return """
+                {
+                    "autor": "%s",
+                    "titulo": "%s",
+                    "texto": "%s",
+                    "categoriaId": "%s"
+                }
+                """.formatted(
+                        autor,
+                        titulo,
+                        texto,
+                        categoriaId
+                );
     }
 
     @Test
     void deveListarPostsComPaginacao() throws Exception {
 
-        Pageable pageable =
-                PageRequest.of(0, 1);
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 1);
 
-        PageImpl<PostResponseDto> page =
-                new PageImpl<>(
-                        List.of(response),
-                        pageable,
-                        1
-                );
+        PageImpl<PostResponseDto> page = new PageImpl<>(
+                List.of(response),
+                pageable,
+                1
+        );
 
-        when(postService.findAll(any(Pageable.class)))
+        when(postService.findAll(
+                any(Pageable.class),
+                nullable(String.class)))
                 .thenReturn(page);
 
+        // Act / Assert
         mockMvc.perform(
                 get("/posts")
                         .param("page", "0")
@@ -89,6 +115,10 @@ class PostControllerTest {
                         .value("Aprendendo Spring Boot"))
                 .andExpect(jsonPath("$.content[0].texto")
                         .value("Conteúdo sobre desenvolvimento de APIs REST."))
+                .andExpect(jsonPath("$.content[0].categoriaId")
+                        .value(categoriaId.toString()))
+                .andExpect(jsonPath("$.content[0].categoriaNome")
+                        .value("Java"))
                 .andExpect(jsonPath("$.page.size")
                         .value(1))
                 .andExpect(jsonPath("$.page.number")
@@ -102,9 +132,11 @@ class PostControllerTest {
     @Test
     void deveObterPostPorId() throws Exception {
 
+        // Arrange
         when(postService.findById(id))
                 .thenReturn(response);
 
+        // Act / Assert
         mockMvc.perform(
                 get("/posts/{id}", id)
         )
@@ -118,25 +150,29 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.titulo")
                         .value("Aprendendo Spring Boot"))
                 .andExpect(jsonPath("$.texto")
-                        .value("Conteúdo sobre desenvolvimento de APIs REST."));
+                        .value("Conteúdo sobre desenvolvimento de APIs REST."))
+                .andExpect(jsonPath("$.categoriaId")
+                        .value(categoriaId.toString()))
+                .andExpect(jsonPath("$.categoriaNome")
+                        .value("Java"));
     }
 
     @Test
-    void deveIncluirPost() throws Exception {
+    void deveIncluirPostComCategoria() throws Exception {
 
-        when(postService.createPost(any(PostRequestDto.class)))
+        // Arrange
+        when(postService.createPost(any()))
                 .thenReturn(response);
 
+        // Act / Assert
         mockMvc.perform(
                 post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "Loester Botelho",
-                                    "titulo": "Aprendendo Spring Boot",
-                                    "texto": "Conteúdo sobre desenvolvimento de APIs REST."
-                                }
-                                """)
+                        .content(jsonPost(
+                                "Loester Botelho",
+                                "Aprendendo Spring Boot",
+                                "Conteúdo sobre desenvolvimento de APIs REST."
+                        ))
         )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id")
@@ -148,12 +184,17 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.titulo")
                         .value("Aprendendo Spring Boot"))
                 .andExpect(jsonPath("$.texto")
-                        .value("Conteúdo sobre desenvolvimento de APIs REST."));
+                        .value("Conteúdo sobre desenvolvimento de APIs REST."))
+                .andExpect(jsonPath("$.categoriaId")
+                        .value(categoriaId.toString()))
+                .andExpect(jsonPath("$.categoriaNome")
+                        .value("Java"));
     }
 
     @Test
-    void deveAtualizarPost() throws Exception {
+    void deveAtualizarPostComCategoria() throws Exception {
 
+        // Arrange
         PostResponseDto responseAtualizado =
                 new PostResponseDto(
                         id,
@@ -161,24 +202,25 @@ class PostControllerTest {
                         LocalDate.of(2026, 9, 16),
                         "Aprendendo Spring Boot",
                         "Conteúdo atualizado sobre desenvolvimento de APIs REST.",
+                        categoriaId,
+                        "Java",
                         List.of()
                 );
 
         when(postService.updatePost(
                 eq(id),
-                any(PostRequestDto.class)))
+                any()))
                 .thenReturn(responseAtualizado);
 
+        // Act / Assert
         mockMvc.perform(
                 put("/posts/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "Loester Botelho",
-                                    "titulo": "Aprendendo Spring Boot",
-                                    "texto": "Conteúdo atualizado sobre desenvolvimento de APIs REST."
-                                }
-                                """)
+                        .content(jsonPost(
+                                "Loester Botelho",
+                                "Aprendendo Spring Boot",
+                                "Conteúdo atualizado sobre desenvolvimento de APIs REST."
+                        ))
         )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id")
@@ -192,16 +234,22 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.texto")
                         .value(
                                 "Conteúdo atualizado sobre desenvolvimento de APIs REST."
-                        ));
+                        ))
+                .andExpect(jsonPath("$.categoriaId")
+                        .value(categoriaId.toString()))
+                .andExpect(jsonPath("$.categoriaNome")
+                        .value("Java"));
     }
 
     @Test
     void deveDeletarPost() throws Exception {
 
+        // Arrange
         doNothing()
                 .when(postService)
                 .deletePost(id);
 
+        // Act / Assert
         mockMvc.perform(
                 delete("/posts/{id}", id)
         )
@@ -216,13 +264,11 @@ class PostControllerTest {
                 post("/posts")
                         .header("Accept-Language", "pt-BR")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "",
-                                    "titulo": "Aprendendo Spring Boot",
-                                    "texto": "Conteúdo sobre desenvolvimento de APIs REST."
-                                }
-                                """)
+                        .content(jsonPost(
+                                "",
+                                "Aprendendo Spring Boot",
+                                "Conteúdo sobre desenvolvimento de APIs REST."
+                        ))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem")
@@ -237,13 +283,11 @@ class PostControllerTest {
                 post("/posts")
                         .header("Accept-Language", "pt-BR")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "AB",
-                                    "titulo": "Aprendendo Spring Boot",
-                                    "texto": "Conteúdo sobre desenvolvimento de APIs REST."
-                                }
-                                """)
+                        .content(jsonPost(
+                                "AB",
+                                "Aprendendo Spring Boot",
+                                "Conteúdo sobre desenvolvimento de APIs REST."
+                        ))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem")
@@ -260,13 +304,11 @@ class PostControllerTest {
                 post("/posts")
                         .header("Accept-Language", "pt-BR")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "Loester Botelho",
-                                    "titulo": "",
-                                    "texto": "Conteúdo sobre desenvolvimento de APIs REST."
-                                }
-                                """)
+                        .content(jsonPost(
+                                "Loester Botelho",
+                                "",
+                                "Conteúdo sobre desenvolvimento de APIs REST."
+                        ))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem")
@@ -281,13 +323,11 @@ class PostControllerTest {
                 post("/posts")
                         .header("Accept-Language", "pt-BR")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "Loester Botelho",
-                                    "titulo": "AB",
-                                    "texto": "Conteúdo sobre desenvolvimento de APIs REST."
-                                }
-                                """)
+                        .content(jsonPost(
+                                "Loester Botelho",
+                                "AB",
+                                "Conteúdo sobre desenvolvimento de APIs REST."
+                        ))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem")
@@ -304,13 +344,11 @@ class PostControllerTest {
                 post("/posts")
                         .header("Accept-Language", "pt-BR")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "Loester Botelho",
-                                    "titulo": "Aprendendo Spring Boot",
-                                    "texto": ""
-                                }
-                                """)
+                        .content(jsonPost(
+                                "Loester Botelho",
+                                "Aprendendo Spring Boot",
+                                ""
+                        ))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem")
@@ -325,18 +363,39 @@ class PostControllerTest {
                 post("/posts")
                         .header("Accept-Language", "pt-BR")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonPost(
+                                "Loester Botelho",
+                                "Aprendendo Spring Boot",
+                                "123456789"
+                        ))
+        )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem")
+                        .value(
+                                "texto: Texto deve possuir no mínimo 10 caracteres"
+                        ));
+    }
+
+    @Test
+    void deveRetornarBadRequestQuandoCategoriaNaoForInformada()
+            throws Exception {
+
+        mockMvc.perform(
+                post("/posts")
+                        .header("Accept-Language", "pt-BR")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                     "autor": "Loester Botelho",
                                     "titulo": "Aprendendo Spring Boot",
-                                    "texto": "123456789"
+                                    "texto": "Conteúdo sobre desenvolvimento de APIs REST."
                                 }
                                 """)
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem")
                         .value(
-                                "texto: Texto deve possuir no mínimo 10 caracteres"
+                                "categoriaId: Categoria é obrigatória"
                         ));
     }
 
@@ -348,13 +407,11 @@ class PostControllerTest {
                 post("/posts")
                         .header("Accept-Language", "en-US")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "AB",
-                                    "titulo": "Aprendendo Spring Boot",
-                                    "texto": "Conteúdo sobre desenvolvimento de APIs REST."
-                                }
-                                """)
+                        .content(jsonPost(
+                                "AB",
+                                "Aprendendo Spring Boot",
+                                "Conteúdo sobre desenvolvimento de APIs REST."
+                        ))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem")
@@ -371,13 +428,11 @@ class PostControllerTest {
                 post("/posts")
                         .header("Accept-Language", "pt-BR")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "autor": "AB",
-                                    "titulo": "Aprendendo Spring Boot",
-                                    "texto": "Conteúdo sobre desenvolvimento de APIs REST."
-                                }
-                                """)
+                        .content(jsonPost(
+                                "AB",
+                                "Aprendendo Spring Boot",
+                                "Conteúdo sobre desenvolvimento de APIs REST."
+                        ))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagem")

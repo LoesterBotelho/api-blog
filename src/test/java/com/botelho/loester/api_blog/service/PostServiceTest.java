@@ -29,7 +29,9 @@ import com.botelho.loester.api_blog.dto.request.PostRequestDto;
 import com.botelho.loester.api_blog.dto.response.PostResponseDto;
 import com.botelho.loester.api_blog.exception.RegistroNaoEncontradoException;
 import com.botelho.loester.api_blog.mapper.PostMapper;
+import com.botelho.loester.api_blog.model.CategoriaModel;
 import com.botelho.loester.api_blog.model.PostModel;
+import com.botelho.loester.api_blog.repository.CategoriaRepository;
 import com.botelho.loester.api_blog.repository.PostRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,12 +41,18 @@ class PostServiceTest {
     private PostRepository postRepository;
 
     @Mock
+    private CategoriaRepository categoriaRepository;
+
+    @Mock
     private PostMapper postMapper;
 
     @InjectMocks
     private PostServiceImpl postService;
 
     private UUID id;
+    private UUID categoriaId;
+
+    private CategoriaModel categoria;
     private PostModel post;
     private PostRequestDto request;
     private PostResponseDto response;
@@ -53,6 +61,12 @@ class PostServiceTest {
     void setUp() {
 
         id = UUID.randomUUID();
+        categoriaId = UUID.randomUUID();
+
+        categoria = new CategoriaModel(
+                categoriaId,
+                "Java"
+        );
 
         post = new PostModel(
                 id,
@@ -64,7 +78,8 @@ class PostServiceTest {
         request = new PostRequestDto(
                 "Loester Botelho",
                 "Aprendendo Spring Boot",
-                "Conteúdo sobre desenvolvimento de APIs REST."
+                "Conteúdo sobre desenvolvimento de APIs REST.",
+                categoriaId
         );
 
         response = new PostResponseDto(
@@ -73,6 +88,8 @@ class PostServiceTest {
                 LocalDate.of(2026, 9, 16),
                 "Aprendendo Spring Boot",
                 "Conteúdo sobre desenvolvimento de APIs REST.",
+                categoriaId,
+                "Java",
                 List.of()
         );
     }
@@ -80,15 +97,14 @@ class PostServiceTest {
     @Test
     void deveListarPostsComPaginacao() {
 
-        Pageable pageable =
-                PageRequest.of(0, 1);
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 1);
 
-        Page<PostModel> page =
-                new PageImpl<>(
-                        List.of(post),
-                        pageable,
-                        1
-                );
+        Page<PostModel> page = new PageImpl<>(
+                List.of(post),
+                pageable,
+                1
+        );
 
         when(postRepository.findAll(pageable))
                 .thenReturn(page);
@@ -96,11 +112,12 @@ class PostServiceTest {
         when(postMapper.toResponse(post))
                 .thenReturn(response);
 
+        // Act
         Page<PostResponseDto> resultado =
                 postService.findAll(pageable);
 
+        // Assert
         assertNotNull(resultado);
-
         assertEquals(1, resultado.getTotalElements());
         assertEquals(1, resultado.getTotalPages());
         assertEquals(1, resultado.getSize());
@@ -112,61 +129,51 @@ class PostServiceTest {
                 resultado.getContent().get(0)
         );
 
-        verify(postRepository)
-                .findAll(pageable);
-
-        verify(postMapper)
-                .toResponse(post);
+        verify(postRepository).findAll(pageable);
+        verify(postMapper).toResponse(post);
     }
 
     @Test
     void deveObterPostPorId() {
 
+        // Arrange
         when(postRepository.findById(id))
                 .thenReturn(Optional.of(post));
 
         when(postMapper.toResponse(post))
                 .thenReturn(response);
 
+        // Act
         PostResponseDto resultado =
                 postService.findById(id);
 
+        // Assert
         assertNotNull(resultado);
+        assertEquals(id, resultado.id());
+        assertEquals("Loester Botelho", resultado.autor());
+        assertEquals("Aprendendo Spring Boot", resultado.titulo());
+        assertEquals(categoriaId, resultado.categoriaId());
+        assertEquals("Java", resultado.categoriaNome());
 
-        assertEquals(
-                id,
-                resultado.id()
-        );
-
-        assertEquals(
-                "Loester Botelho",
-                resultado.autor()
-        );
-
-        assertEquals(
-                "Aprendendo Spring Boot",
-                resultado.titulo()
-        );
-
-        verify(postRepository)
-                .findById(id);
-
-        verify(postMapper)
-                .toResponse(post);
+        verify(postRepository).findById(id);
+        verify(postMapper).toResponse(post);
     }
 
     @Test
     void deveLancarExcecaoQuandoPostNaoForEncontrado() {
 
+        // Arrange
         when(postRepository.findById(id))
                 .thenReturn(Optional.empty());
 
+        // Act
         RegistroNaoEncontradoException exception =
                 assertThrows(
                         RegistroNaoEncontradoException.class,
                         () -> postService.findById(id)
                 );
 
+        // Assert
         assertEquals(
                 "post.notfound",
                 exception.getMessageKey()
@@ -177,60 +184,90 @@ class PostServiceTest {
                 exception.getArgs()
         );
 
-        verify(postRepository)
-                .findById(id);
+        verify(postRepository).findById(id);
 
         verify(postMapper, never())
                 .toResponse(any());
     }
 
     @Test
-    void deveIncluirPost() {
+    void deveIncluirPostComCategoria() {
 
+        // Arrange
         when(postMapper.toModel(request))
                 .thenReturn(post);
 
+        when(categoriaRepository.findById(categoriaId))
+                .thenReturn(Optional.of(categoria));
+
         when(postRepository.save(post))
                 .thenReturn(post);
 
         when(postMapper.toResponse(post))
                 .thenReturn(response);
 
+        // Act
         PostResponseDto resultado =
                 postService.createPost(request);
 
+        // Assert
         assertNotNull(resultado);
+        assertEquals(id, resultado.id());
+        assertEquals("Loester Botelho", resultado.autor());
+        assertEquals("Aprendendo Spring Boot", resultado.titulo());
 
-        assertEquals(
-                id,
-                resultado.id()
-        );
+        assertEquals(categoriaId, resultado.categoriaId());
+        assertEquals("Java", resultado.categoriaNome());
+        assertEquals(categoria, post.getCategoria());
 
-        assertEquals(
-                "Loester Botelho",
-                resultado.autor()
-        );
-
-        assertEquals(
-                "Aprendendo Spring Boot",
-                resultado.titulo()
-        );
-
-        verify(postMapper)
-                .toModel(request);
-
-        verify(postRepository)
-                .save(post);
-
-        verify(postMapper)
-                .toResponse(post);
+        verify(postMapper).toModel(request);
+        verify(categoriaRepository).findById(categoriaId);
+        verify(postRepository).save(post);
+        verify(postMapper).toResponse(post);
     }
 
     @Test
-    void deveAtualizarPost() {
+    void deveLancarExcecaoAoCadastrarPostComCategoriaInexistente() {
 
+        // Arrange
+        when(postMapper.toModel(request))
+                .thenReturn(post);
+
+        when(categoriaRepository.findById(categoriaId))
+                .thenReturn(Optional.empty());
+
+        // Act
+        RegistroNaoEncontradoException exception =
+                assertThrows(
+                        RegistroNaoEncontradoException.class,
+                        () -> postService.createPost(request)
+                );
+
+        // Assert
+        assertEquals(
+                "categoria.notfound",
+                exception.getMessageKey()
+        );
+
+        assertArrayEquals(
+                new Object[]{categoriaId},
+                exception.getArgs()
+        );
+
+        verify(categoriaRepository).findById(categoriaId);
+        verify(postRepository, never()).save(any());
+        verify(postMapper, never()).toResponse(any());
+    }
+
+    @Test
+    void deveAtualizarPostComCategoria() {
+
+        // Arrange
         when(postRepository.findById(id))
                 .thenReturn(Optional.of(post));
+
+        when(categoriaRepository.findById(categoriaId))
+                .thenReturn(Optional.of(categoria));
 
         when(postRepository.save(post))
                 .thenReturn(post);
@@ -238,38 +275,46 @@ class PostServiceTest {
         when(postMapper.toResponse(post))
                 .thenReturn(response);
 
+        // Act
         PostResponseDto resultado =
                 postService.updatePost(id, request);
 
+        // Assert
         assertNotNull(resultado);
+        assertEquals(id, resultado.id());
+        assertEquals(categoriaId, resultado.categoriaId());
+        assertEquals("Java", resultado.categoriaNome());
 
+        assertEquals("Loester Botelho", post.getAutor());
+        assertEquals("Aprendendo Spring Boot", post.getTitulo());
         assertEquals(
-                id,
-                resultado.id()
+                "Conteúdo sobre desenvolvimento de APIs REST.",
+                post.getTexto()
         );
 
-        verify(postRepository)
-                .findById(id);
+        assertEquals(categoria, post.getCategoria());
 
-        verify(postRepository)
-                .save(post);
-
-        verify(postMapper)
-                .toResponse(post);
+        verify(postRepository).findById(id);
+        verify(categoriaRepository).findById(categoriaId);
+        verify(postRepository).save(post);
+        verify(postMapper).toResponse(post);
     }
 
     @Test
     void deveLancarExcecaoAoAtualizarPostInexistente() {
 
+        // Arrange
         when(postRepository.findById(id))
                 .thenReturn(Optional.empty());
 
+        // Act
         RegistroNaoEncontradoException exception =
                 assertThrows(
                         RegistroNaoEncontradoException.class,
                         () -> postService.updatePost(id, request)
                 );
 
+        // Assert
         assertEquals(
                 "post.notfound",
                 exception.getMessageKey()
@@ -280,40 +325,74 @@ class PostServiceTest {
                 exception.getArgs()
         );
 
-        verify(postRepository)
-                .findById(id);
+        verify(postRepository).findById(id);
+        verify(categoriaRepository, never()).findById(any());
+        verify(postRepository, never()).save(any());
+    }
 
-        verify(postRepository, never())
-                .save(any());
+    @Test
+    void deveLancarExcecaoAoAtualizarComCategoriaInexistente() {
+
+        // Arrange
+        when(postRepository.findById(id))
+                .thenReturn(Optional.of(post));
+
+        when(categoriaRepository.findById(categoriaId))
+                .thenReturn(Optional.empty());
+
+        // Act
+        RegistroNaoEncontradoException exception =
+                assertThrows(
+                        RegistroNaoEncontradoException.class,
+                        () -> postService.updatePost(id, request)
+                );
+
+        // Assert
+        assertEquals(
+                "categoria.notfound",
+                exception.getMessageKey()
+        );
+
+        assertArrayEquals(
+                new Object[]{categoriaId},
+                exception.getArgs()
+        );
+
+        verify(postRepository).findById(id);
+        verify(categoriaRepository).findById(categoriaId);
+        verify(postRepository, never()).save(any());
     }
 
     @Test
     void deveDeletarPost() {
 
+        // Arrange
         when(postRepository.findById(id))
                 .thenReturn(Optional.of(post));
 
+        // Act
         postService.deletePost(id);
 
-        verify(postRepository)
-                .findById(id);
-
-        verify(postRepository)
-                .delete(post);
+        // Assert
+        verify(postRepository).findById(id);
+        verify(postRepository).delete(post);
     }
 
     @Test
     void deveLancarExcecaoAoDeletarPostInexistente() {
 
+        // Arrange
         when(postRepository.findById(id))
                 .thenReturn(Optional.empty());
 
+        // Act
         RegistroNaoEncontradoException exception =
                 assertThrows(
                         RegistroNaoEncontradoException.class,
                         () -> postService.deletePost(id)
                 );
 
+        // Assert
         assertEquals(
                 "post.notfound",
                 exception.getMessageKey()
@@ -324,10 +403,7 @@ class PostServiceTest {
                 exception.getArgs()
         );
 
-        verify(postRepository)
-                .findById(id);
-
-        verify(postRepository, never())
-                .delete(any());
+        verify(postRepository).findById(id);
+        verify(postRepository, never()).delete(any());
     }
 }

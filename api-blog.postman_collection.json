@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "a8f3d1e2-2026-4025-a1b2-9c8d7e6f5a4b",
-    "name": "api-blog - Posts, Paginação, Comments & GlobalExceptionHandler",
-    "description": "Collection completa para testes da Blog API: posts, paginação, comentários, validações e GlobalExceptionHandler.",
+    "name": "api-blog - Posts, Categorias, Comentários, Paginação, Filtros e GlobalExceptionHandler",
+    "description": "Collection para testes da Blog API: posts com categoria, paginação e filtro por título; comentários com paginação e filtro por texto; validações multilíngues; erros 400/404; e GlobalExceptionHandler.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -20,6 +20,18 @@
       "key": "commentId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "30000000-0000-0000-0000-000000000001",
+      "type": "string",
+      "description": "UUID da categoria Desenvolvimento de Software, criada pelo script SQL de seed."
+    },
+    {
+      "key": "categoriaIdInexistente",
+      "value": "00000000-0000-0000-0000-000000000001",
+      "type": "string",
+      "description": "UUID que deve representar uma categoria inexistente para testar o 404."
     }
   ],
   "item": [
@@ -90,6 +102,8 @@
                   "        pm.expect(json.content[0]).to.have.property(\"data\");",
                   "        pm.expect(json.content[0]).to.have.property(\"titulo\");",
                   "        pm.expect(json.content[0]).to.have.property(\"texto\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"categoriaId\");",
+                  "        pm.expect(json.content[0]).to.have.property(\"categoriaNome\");",
                   "        pm.expect(json.content[0]).to.have.property(\"comentarios\");",
                   "    }",
                   "});"
@@ -157,7 +171,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST com Spring Boot.\"\n}"
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST com Spring Boot.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
             },
             "url": "{{baseUrl}}/posts"
           },
@@ -178,8 +192,41 @@
                   "    pm.expect(json).to.have.property(\"data\");",
                   "    pm.expect(json).to.have.property(\"titulo\");",
                   "    pm.expect(json).to.have.property(\"texto\");",
+                  "    pm.expect(json.categoriaId).to.eql(pm.collectionVariables.get(\"categoriaId\"));",
+                  "    pm.expect(json.categoriaNome).to.be.a(\"string\");",
                   "    pm.expect(json).to.have.property(\"comentarios\");",
                   "    pm.collectionVariables.set(\"postId\", json.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03A - GET - Filtrar posts por título",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/posts?titulo=Aprendendo%20Spring%20Boot&page=0&size=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Filtra posts pelo título\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.content).to.be.an(\"array\").that.is.not.empty;",
+                  "    json.content.forEach(function (post) {",
+                  "        pm.expect(post.titulo.toLowerCase()).to.include(\"aprendendo spring boot\");",
+                  "        pm.expect(post).to.have.property(\"categoriaId\");",
+                  "        pm.expect(post).to.have.property(\"categoriaNome\");",
+                  "    });",
                   "});"
                 ]
               }
@@ -210,6 +257,8 @@
                   "    pm.expect(json).to.have.property(\"data\");",
                   "    pm.expect(json).to.have.property(\"titulo\");",
                   "    pm.expect(json).to.have.property(\"texto\");",
+                  "    pm.expect(json).to.have.property(\"categoriaId\");",
+                  "    pm.expect(json).to.have.property(\"categoriaNome\");",
                   "    pm.expect(json).to.have.property(\"comentarios\");",
                   "});"
                 ]
@@ -264,7 +313,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot - Atualizado\",\n  \"texto\": \"Conteúdo atualizado sobre desenvolvimento de APIs REST.\"\n}"
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot - Atualizado\",\n  \"texto\": \"Conteúdo atualizado sobre desenvolvimento de APIs REST.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
             },
             "url": "{{baseUrl}}/posts/{{postId}}"
           },
@@ -281,6 +330,8 @@
                   "pm.test(\"Retorna PostResponseDto atualizado\", function () {",
                   "    const json = pm.response.json();",
                   "    pm.expect(json.titulo).to.eql(\"Aprendendo Spring Boot - Atualizado\");",
+                  "    pm.expect(json.categoriaId).to.eql(pm.collectionVariables.get(\"categoriaId\"));",
+                  "    pm.expect(json.categoriaNome).to.be.a(\"string\");",
                   "    pm.expect(json).to.have.property(\"comentarios\");",
                   "});"
                 ]
@@ -300,7 +351,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
             },
             "url": "{{baseUrl}}/posts/00000000-0000-0000-0000-000000000000"
           },
@@ -374,7 +425,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"autor\": \"\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+                  "raw": "{\n  \"autor\": \"\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
                 },
                 "url": "{{baseUrl}}/posts"
               },
@@ -418,7 +469,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"autor\": \"AB\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+                  "raw": "{\n  \"autor\": \"AB\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
                 },
                 "url": "{{baseUrl}}/posts"
               },
@@ -461,7 +512,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
                 },
                 "url": "{{baseUrl}}/posts"
               },
@@ -504,7 +555,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"AB\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\"\n}"
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"AB\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
                 },
                 "url": "{{baseUrl}}/posts"
               },
@@ -547,7 +598,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Curto\"\n}"
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Curto\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
                 },
                 "url": "{{baseUrl}}/posts"
               },
@@ -590,7 +641,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"\"\n}"
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
                 },
                 "url": "{{baseUrl}}/posts"
               },
@@ -655,6 +706,247 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "16 - Categoria obrigatória (ausente)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "url": "{{baseUrl}}/posts",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Post sem categoria\",\n  \"texto\": \"Este post não informa uma categoria.\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 quando categoria não é informada\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Retorna mensagem de categoria obrigatória\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"categoriaId: Categoria é obrigatória\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "17 - Mensagem de validação em inglês",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  }
+                ],
+                "url": "{{baseUrl}}/posts",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"AB\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 para autor inválido\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Retorna mensagem de validação em inglês\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"autor: Author must contain between 3 and 100 characters\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "18 - Mensagem de validação em português",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "url": "{{baseUrl}}/posts",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"AB\",\n  \"titulo\": \"Aprendendo Spring Boot\",\n  \"texto\": \"Conteúdo sobre desenvolvimento de APIs REST.\",\n  \"categoriaId\": \"{{categoriaId}}\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 para autor inválido\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Retorna mensagem de validação em português\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"autor: Autor deve possuir entre 3 e 100 caracteres\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "17 - POST - Categoria inexistente (404 Not Found)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "pt-BR"
+              }
+            ],
+            "url": "{{baseUrl}}/posts",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Post com categoria inexistente\",\n  \"texto\": \"Este post referencia uma categoria inexistente.\",\n  \"categoriaId\": \"{{categoriaIdInexistente}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 para categoria inexistente\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna mensagem de categoria não encontrada\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.mensagem).to.include(\"Categoria não encontrada com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18 - PUT - Categoria inexistente ao atualizar (404 Not Found)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "pt-BR"
+              }
+            ],
+            "url": "{{baseUrl}}/posts/{{postId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Atualização com categoria inexistente\",\n  \"texto\": \"Este post referencia uma categoria inexistente durante a atualização.\",\n  \"categoriaId\": \"{{categoriaIdInexistente}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 quando a categoria não existe na atualização\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Valida contrato ErroResponseDto\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.all.keys(\"status\", \"erro\", \"mensagem\", \"dataHora\");",
+                  "    pm.expect(json.status).to.eql(404);",
+                  "    pm.expect(json.erro).to.eql(\"Not Found\");",
+                  "});",
+                  "",
+                  "pm.test(\"Valida mensagem de categoria não encontrada\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.mensagem).to.include(\"Categoria não encontrada com o ID\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "19 - PUT - Categoria obrigatória ausente (400 Bad Request)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "pt-BR"
+              }
+            ],
+            "url": "{{baseUrl}}/posts/{{postId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"autor\": \"Loester Botelho\",\n  \"titulo\": \"Atualização sem categoria\",\n  \"texto\": \"Este post não informa uma categoria na atualização.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 quando a categoria não é informada na atualização\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna mensagem de categoria obrigatória\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.mensagem).to.include(\"categoriaId: Categoria é obrigatória\");",
+                  "});"
+                ]
+              }
             }
           ]
         }
@@ -698,6 +990,43 @@
                   "    pm.expect(json).to.have.property(\"postId\");",
                   "    pm.expect(json.postId).to.eql(pm.collectionVariables.get(\"postId\"));",
                   "    pm.collectionVariables.set(\"commentId\", json.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16A - GET - Filtrar comentários por texto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/comments?texto=Spring%20Boot&page=0&size=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Filtra comentários pelo texto ignorando maiúsculas e minúsculas\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.content).to.be.an(\"array\").that.is.not.empty;",
+                  "    json.content.forEach(function (comment) {",
+                  "        pm.expect(comment.texto.toLowerCase()).to.include(\"spring boot\");",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna metadados de paginação do filtro\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"page\");",
+                  "    pm.expect(json.page.size).to.eql(5);",
+                  "    pm.expect(json.page.number).to.eql(0);",
+                  "    pm.expect(json.page.totalElements).to.be.at.least(1);",
                   "});"
                 ]
               }
@@ -1192,6 +1521,84 @@
                       "pm.test(\"Valida mensagem de tamanho do Texto\", function () {",
                       "    const json = pm.response.json();",
                       "    pm.expect(json.mensagem).to.include(\"texto: Texto deve possuir entre 5 e 1000 caracteres\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "30 - Mensagem de validação em inglês",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  }
+                ],
+                "url": "{{baseUrl}}/comments/post/{{postId}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"AB\",\n  \"texto\": \"Excelente conteúdo sobre Spring Boot.\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 para autor inválido\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Retorna mensagem de validação em inglês\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"autor: Author must contain between 3 and 100 characters\");",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "31 - Mensagem de validação em português",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "pt-BR"
+                  }
+                ],
+                "url": "{{baseUrl}}/comments/post/{{postId}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"autor\": \"AB\",\n  \"texto\": \"Excelente conteúdo sobre Spring Boot.\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400 para autor inválido\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});",
+                      "",
+                      "pm.test(\"Retorna mensagem de validação em português\", function () {",
+                      "    const json = pm.response.json();",
+                      "    pm.expect(json.mensagem).to.include(\"autor: Autor deve possuir entre 3 e 100 caracteres\");",
                       "});"
                     ]
                   }

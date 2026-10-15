@@ -15,5 +15,4 @@ public interface PostRepository
             String titulo,
             Pageable pageable
     );
-
 }

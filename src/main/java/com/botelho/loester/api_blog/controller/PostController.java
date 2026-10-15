@@ -40,7 +40,8 @@ public class PostController {
     }
 
     @Operation(
-        summary = "Lista posts com paginação e filtro por título"
+        summary = "Lista posts com paginação e filtro por título",
+        description = "Retorna posts paginados, incluindo os dados da categoria."
     )
     @GetMapping
     public PageResponseDto<PostResponseDto> findAll(
@@ -62,7 +63,8 @@ public class PostController {
     }
 
     @Operation(
-        summary = "Busca um post pelo ID"
+        summary = "Busca um post pelo ID",
+        description = "Retorna os dados do post, incluindo sua categoria."
     )
     @GetMapping("/{id}")
     public PostResponseDto findById(
@@ -72,7 +74,8 @@ public class PostController {
     }
 
     @Operation(
-        summary = "Cadastra um novo post"
+        summary = "Cadastra um novo post",
+        description = "Recebe os dados do post e o ID de uma categoria existente."
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -83,7 +86,8 @@ public class PostController {
     }
 
     @Operation(
-        summary = "Atualiza um post"
+        summary = "Atualiza um post",
+        description = "Atualiza os dados do post e sua categoria."
     )
     @PutMapping("/{id}")
     public PostResponseDto updatePost(

@@ -13,9 +13,12 @@ import org.hibernate.type.SqlTypes;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -42,14 +45,22 @@ public class PostModel implements Serializable {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String texto;
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoria_id")
+    private CategoriaModel categoria;
+
+    @OneToMany(
+        mappedBy = "post",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     private List<CommentModel> comentarios = new ArrayList<>();
 
     public PostModel() {
         this.data = LocalDate.now();
     }
-    
+
     public PostModel(String autor, String titulo, String texto) {
         this.autor = autor;
         this.data = LocalDate.now();
@@ -65,14 +76,19 @@ public class PostModel implements Serializable {
         this.texto = texto;
     }
 
-    public PostModel(UUID id, String autor, LocalDate data, String titulo, String texto) {
+    public PostModel(
+            UUID id,
+            String autor,
+            LocalDate data,
+            String titulo,
+            String texto) {
         this.id = id;
         this.autor = autor;
         this.data = data != null ? data : LocalDate.now();
         this.titulo = titulo;
         this.texto = texto;
     }
-    
+
     @PrePersist
     public void prePersist() {
         if (this.data == null) {
@@ -80,14 +96,6 @@ public class PostModel implements Serializable {
         }
     }
 
-    public List<CommentModel> getComentarios() {
-        return comentarios;
-    }
-
-    public void setComentarios(List<CommentModel> comentarios) {
-        this.comentarios = comentarios;
-    }
-    
     public UUID getId() {
         return id;
     }
@@ -113,7 +121,7 @@ public class PostModel implements Serializable {
     }
 
     public String getTitulo() {
-        return this.titulo;
+        return titulo;
     }
 
     public void setTitulo(String titulo) {
@@ -128,13 +136,29 @@ public class PostModel implements Serializable {
         this.texto = texto;
     }
 
+    public CategoriaModel getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(CategoriaModel categoria) {
+        this.categoria = categoria;
+    }
+
+    public List<CommentModel> getComentarios() {
+        return comentarios;
+    }
+
+    public void setComentarios(List<CommentModel> comentarios) {
+        this.comentarios = comentarios;
+    }
+
     @Override
     public String toString() {
-        return "PostModel [id=" + this.getId() + 
-                ", autor=" + this.getAutor() + 
-                ", data=" + this.getData() + 
-                ", Titulo=" + this.getTitulo() + 
-                ", texto=" + this.getTexto()
+        return "PostModel [id=" + id
+                + ", autor=" + autor
+                + ", data=" + data
+                + ", titulo=" + titulo
+                + ", texto=" + texto
                 + "]";
     }
 
@@ -151,6 +175,7 @@ public class PostModel implements Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
+
         PostModel other = (PostModel) obj;
         return Objects.equals(id, other.id);
     }

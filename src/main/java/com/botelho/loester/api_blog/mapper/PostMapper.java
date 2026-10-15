@@ -7,12 +7,19 @@ import com.botelho.loester.api_blog.dto.request.PostRequestDto;
 import com.botelho.loester.api_blog.dto.response.PostResponseDto;
 import com.botelho.loester.api_blog.model.PostModel;
 
-@Mapper(componentModel = "spring", uses = CommentMapper.class)
+@Mapper(
+    componentModel = "spring",
+    uses = CommentMapper.class
+)
 public interface PostMapper {
 
+    @Mapping(target = "categoriaId", source = "categoria.id")
+    @Mapping(target = "categoriaNome", source = "categoria.nome")
     PostResponseDto toResponse(PostModel post);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "data", ignore = true)
     @Mapping(target = "comentarios", ignore = true)
+    @Mapping(target = "categoria", ignore = true)
     PostModel toModel(PostRequestDto request);
 }

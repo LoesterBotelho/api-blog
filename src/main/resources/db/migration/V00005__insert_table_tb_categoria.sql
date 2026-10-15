@@ -1,0 +1,10 @@
+INSERT INTO blogappdb.tb_categoria (id, nome) VALUES
+('30000000-0000-0000-0000-000000000001', 'Desenvolvimento de Software'),
+('30000000-0000-0000-0000-000000000002', 'DevOps e Deploy'),
+('30000000-0000-0000-0000-000000000003', 'Git e Versionamento'),
+('30000000-0000-0000-0000-000000000004', 'Código Legado e Refatoração'),
+('30000000-0000-0000-0000-000000000005', 'Testes e Qualidade'),
+('30000000-0000-0000-0000-000000000006', 'Infraestrutura e Containers'),
+('30000000-0000-0000-0000-000000000007', 'Gestão Ágil'),
+('30000000-0000-0000-0000-000000000008', 'Banco de Dados'),
+('30000000-0000-0000-0000-000000000009', 'Carreira e Equipe');
