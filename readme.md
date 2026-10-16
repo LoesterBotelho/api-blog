@@ -1,3 +1,15 @@
+## Usuários padrão
+
+```
+admin / Admin@123  
+student1 / Admin@123
+```
+
+```
+mvn clean resources:resources
+```
+
+
 # ATENÇÃO !!!
 
 ### O arquivo : "messages_pt_BR.properties" , tem que ser editado pelo notepad++ ou ferramenta que permita editar em utf-8 , convert coding utf-8. senão da erros nos testes unitários e newman.
