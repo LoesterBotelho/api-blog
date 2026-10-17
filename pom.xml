@@ -5,7 +5,9 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Spring Boot -->
+    <!-- ====================================================== -->
+    <!-- SPRING BOOT                                            -->
+    <!-- ====================================================== -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -13,33 +15,35 @@
         <relativePath/>
     </parent>
 
-    <!-- Identificação do projeto -->
+    <!-- ====================================================== -->
+    <!-- IDENTIFICAÇÃO DO PROJETO                               -->
+    <!-- ====================================================== -->
     <groupId>com.api</groupId>
     <artifactId>api-blog</artifactId>
     <version>1.0.0</version>
-
     <name>api-blog</name>
-    <description>API RESTful para Blog com Spring Security, JWT e Swagger</description>
+    <description>API RESTful para Blog com Spring Security, JWT, Swagger e H2</description>
     <packaging>jar</packaging>
 
-    <!-- Propriedades -->
+    <!-- ====================================================== -->
+    <!-- PROPRIEDADES                                           -->
+    <!-- ====================================================== -->
     <properties>
         <java.version>25</java.version>
-
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <mapstruct.version>1.6.3</mapstruct.version>
         <springdoc.version>3.1.1</springdoc.version>
         <jjwt.version>0.12.7</jjwt.version>
-        <junit.version>6.0.2</junit.version>
-
-        <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
     </properties>
 
+    <!-- ====================================================== -->
+    <!-- DEPENDÊNCIAS                                           -->
+    <!-- ====================================================== -->
     <dependencies>
 
-        <!-- API RESTful -->
+        <!-- API RESTful: Spring MVC -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
@@ -51,13 +55,13 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- Persistência com JPA -->
+        <!-- Persistência com JPA e Hibernate -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- Validação -->
+        <!-- Validação de DTOs -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
@@ -83,44 +87,53 @@
             <version>${mapstruct.version}</version>
         </dependency>
 
-        <!-- Banco principal: MariaDB (mantido) -->
+        <!-- Banco principal: MariaDB -->
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Flyway (mantido) -->
+        <!-- Flyway -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
 
+        <!-- Suporte do Flyway para MySQL/MariaDB -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
         </dependency>
 
-        <!-- Bancos adicionais opcionais (mantidos) -->
+        <!-- Console H2 do Spring Boot 4 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-h2console</artifactId>
+        </dependency>
+
+        <!-- Banco H2 em memória -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
 
+        <!-- PostgreSQL opcional -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- JWT -->
+        <!-- JWT: API -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>${jjwt.version}</version>
         </dependency>
 
+        <!-- JWT: implementação -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
@@ -128,6 +141,7 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- JWT: integração com Jackson -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -142,18 +156,14 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Testes: JUnit Jupiter, Mockito, AssertJ e Spring Boot Test -->
+        <!-- ================================================== -->
+        <!-- DEPENDÊNCIAS DE TESTE                              -->
+        <!-- ================================================== -->
+
+        <!-- JUnit Jupiter, Mockito e AssertJ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- JUnit Jupiter 6 -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -164,7 +174,14 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Testes específicos da API RESTful no Spring Boot 4 -->
+        <!-- Testes de persistência JPA: Spring Boot 4 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testes específicos do Spring MVC: Spring Boot 4 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
@@ -173,6 +190,9 @@
 
     </dependencies>
 
+    <!-- ====================================================== -->
+    <!-- BUILD                                                  -->
+    <!-- ====================================================== -->
     <build>
 
         <!-- Recursos da aplicação -->
@@ -189,7 +209,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <release>${java.version}</release>
                     <encoding>${project.build.sourceEncoding}</encoding>
