@@ -1,2 +1,0 @@
-INSERT INTO app_user (username, password, full_name, enabled) VALUES ('admin', '$2a$10$r.onnlwQHsdFcNZSOu7ZYOvkc5i9o8MVlpiaU9U6MxCWyon0eXXzK', 'Administrator', TRUE);
-INSERT INTO app_user (username, password, full_name, enabled) VALUES ('student1', '$2a$10$r.onnlwQHsdFcNZSOu7ZYOvkc5i9o8MVlpiaU9U6MxCWyon0eXXzK', 'Student One', TRUE);

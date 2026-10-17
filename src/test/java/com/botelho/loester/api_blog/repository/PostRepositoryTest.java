@@ -5,15 +5,15 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
 import com.botelho.loester.api_blog.model.PostModel;
-
-import org.assertj.core.api.Assertions;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -24,6 +24,8 @@ class PostRepositoryTest {
     private PostRepository repository;
 
     @Test
+    // exemplo de insert de caso de uso
+    // @Sql("/dbtest/post/post-cenario-filtro.sql")
     @DisplayName("Deve salvar e retornar um post")
     void deveSalvarERetornarPost() {
 
